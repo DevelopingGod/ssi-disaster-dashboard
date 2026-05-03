@@ -1,0 +1,205 @@
+@import "tailwindcss";
+@import "leaflet/dist/leaflet.css";
+
+@theme inline {
+  --font-sans: var(--font-geist-sans);
+  --font-mono: var(--font-geist-mono);
+}
+
+/* ── Coffee Dark Theme (default) ──────────────────────── */
+:root {
+  --bg-primary:   #120D0A;
+  --bg-secondary: #18120E;
+  --bg-surface:   #211A15;
+  --bg-elevated:  #2A211B;
+  --border-c:     #3A2E27;
+  --accent:       #C68A3B;
+  --accent-dim:   #A9742A;
+  --teal:         #4E6E6A;
+  --text-primary:   #F5EFE8;
+  --text-secondary: #B7AAA0;
+  --text-muted:     #7E7067;
+}
+
+/* ── Light Theme override ──────────────────────────────── */
+html.light {
+  --bg-primary:   #F6F1EA;
+  --bg-secondary: #EEE4D8;
+  --bg-surface:   #E4D7C8;
+  --bg-elevated:  #D8C8B5;
+  --border-c:     #C7B8A7;
+  --accent:       #A86C2D;
+  --accent-dim:   #8B5A22;
+  --teal:         #5D7A75;
+  --text-primary:   #201815;
+  --text-secondary: #5C4D45;
+  --text-muted:     #8C7B70;
+}
+
+html,
+body {
+  height: 100%;
+  overflow-x: hidden;
+}
+
+body {
+  background-color: var(--bg-primary);
+  color: var(--text-primary);
+  font-family: var(--font-geist-sans), system-ui, sans-serif;
+  transition: background-color 0.25s ease, color 0.25s ease;
+}
+
+/* ── Semantic hover utilities ──────────────────────────── */
+
+.module-card {
+  background-color: var(--bg-primary);
+  border-right:  1px solid var(--border-c);
+  border-bottom: 1px solid var(--border-c);
+  transition: background-color 0.22s ease, box-shadow 0.22s ease;
+  position: relative;
+}
+.module-card:hover {
+  background-color: var(--bg-secondary);
+  box-shadow:
+    inset 1px 0 0 color-mix(in srgb, var(--accent) 35%, transparent),
+    inset 0 1px 0 color-mix(in srgb, var(--accent) 35%, transparent),
+    0 8px 28px rgba(0,0,0,0.18);
+}
+.module-card .module-icon {
+  transition: color 0.22s ease, transform 0.22s ease;
+}
+.module-card:hover .module-icon {
+  color: var(--accent) !important;
+  transform: scale(1.1);
+}
+
+.partner-card {
+  background-color: var(--bg-primary);
+  transition: background-color 0.2s ease, box-shadow 0.2s ease;
+}
+.partner-card:hover {
+  background-color: var(--bg-secondary);
+  box-shadow: 0 4px 20px rgba(0,0,0,0.15);
+}
+.partner-name {
+  color: var(--text-muted);
+  transition: color 0.2s ease;
+}
+.partner-card:hover .partner-name {
+  color: var(--text-primary);
+}
+.partner-icon {
+  color: var(--border-c);
+  transition: color 0.2s ease, transform 0.2s ease;
+}
+.partner-card:hover .partner-icon {
+  color: var(--accent);
+  transform: translate(2px, -2px);
+}
+
+.nav-link {
+  color: var(--text-secondary);
+  font-size: 0.6875rem;
+  font-family: var(--font-geist-mono), monospace;
+  text-transform: uppercase;
+  letter-spacing: 0.13em;
+  transition: color 0.18s ease;
+  position: relative;
+  display: inline-block;
+  padding-bottom: 2px;
+}
+.nav-link::after {
+  content: '';
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  width: 0;
+  height: 1px;
+  background-color: var(--accent);
+  transition: width 0.22s cubic-bezier(0.22, 1, 0.36, 1);
+}
+.nav-link:hover {
+  color: var(--text-primary);
+}
+.nav-link:hover::after {
+  width: 100%;
+}
+
+/* ── Accent button glow ────────────────────────────────── */
+.btn-accent-glow {
+  transition: opacity 0.18s ease, box-shadow 0.22s ease !important;
+}
+.btn-accent-glow:hover {
+  opacity: 0.9 !important;
+  box-shadow: 0 0 22px color-mix(in srgb, var(--accent) 45%, transparent),
+              0 2px 8px rgba(0,0,0,0.25);
+}
+
+/* ── Chat / Map resize handle ──────────────────────────── */
+.resize-handle {
+  transition: background-color 0.15s ease;
+  position: relative;
+}
+.resize-handle::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  left: -4px;
+  right: -4px; /* wider invisible hit target */
+}
+
+/* ── Message entry animation ───────────────────────────── */
+@keyframes fadeUp {
+  from { opacity: 0; transform: translateY(7px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+.msg-enter {
+  animation: fadeUp 0.24s cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+/* ── Page transition ───────────────────────────────────── */
+@keyframes pageEnter {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.page-enter {
+  animation: pageEnter 0.28s cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+/* ── Scrollbar ─────────────────────────────────────────── */
+::-webkit-scrollbar          { width: 4px; height: 4px; }
+::-webkit-scrollbar-track    { background: var(--bg-primary); }
+::-webkit-scrollbar-thumb    { background: var(--border-c); border-radius: 2px; }
+::-webkit-scrollbar-thumb:hover { background: var(--text-muted); }
+
+/* ── Leaflet overrides ─────────────────────────────────── */
+.leaflet-container { background: var(--bg-primary) !important; }
+.leaflet-bar a {
+  background-color: var(--bg-elevated) !important;
+  border-color: var(--border-c) !important;
+  color: var(--text-primary) !important;
+}
+.leaflet-bar a:hover {
+  background-color: var(--bg-surface) !important;
+}
+.leaflet-control-attribution {
+  background: color-mix(in srgb, var(--bg-elevated) 80%, transparent) !important;
+  color: var(--text-muted) !important;
+  font-size: 9px !important;
+}
+.leaflet-popup-content-wrapper {
+  background-color: var(--bg-elevated) !important;
+  color: var(--text-primary) !important;
+  border: 1px solid var(--border-c) !important;
+  border-radius: 2px !important;
+  box-shadow: 0 8px 24px rgba(0,0,0,0.4) !important;
+}
+.leaflet-popup-tip { background: var(--bg-elevated) !important; }
