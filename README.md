@@ -1,3 +1,12 @@
+---
+title: Natural-Disaster.io
+emoji: 🌍
+colorFrom: red
+colorTo: orange
+sdk: docker
+pinned: false
+---
+
 # Natural-Disaster.io
 
 An agentic disaster intelligence dashboard. Ask anything about current or historical natural disasters in plain language — any language — and get a structured briefing with events plotted on an interactive world map.
