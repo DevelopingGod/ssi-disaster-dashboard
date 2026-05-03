@@ -1,0 +1,34 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(tree -L 3 \"D:\\\\Claude-Projects\\\\Agentic-Disaster-Dashboard\\\\frontend\" --ignore node_modules --ignore .next)",
+      "Bash(npx tsc *)",
+      "Bash(npm run *)",
+      "Bash(xargs grep *)",
+      "Bash(python -m py_compile app/graph/tools.py)",
+      "Bash(python -m py_compile app/graph/nodes.py)",
+      "Bash(python -c ' *)",
+      "Bash(python -m venv --help)",
+      "Bash(ls .venv/Scripts/)",
+      "Bash(ls .venv/bin/)",
+      "Bash(ls *.txt)",
+      "Bash(where python *)",
+      "Bash(pip show *)",
+      "Bash(python -m py_compile \"D:\\\\Claude-Projects\\\\Agentic-Disaster-Dashboard\\\\app\\\\graph\\\\tools.py\")",
+      "Bash(python -m py_compile \"D:\\\\Claude-Projects\\\\Agentic-Disaster-Dashboard\\\\app\\\\graph\\\\nodes.py\")",
+      "Bash(python -m py_compile \"D:\\\\Claude-Projects\\\\Agentic-Disaster-Dashboard\\\\app\\\\main.py\")",
+      "Bash(node -e \"const {Trash2}=require\\('D:/Claude-Projects/Agentic-Disaster-Dashboard/frontend/node_modules/lucide-react'\\);console.log\\(typeof Trash2\\)\")",
+      "Bash(\"venv\\\\Scripts\\\\python.exe\" -c \"import ast, sys; ast.parse\\(open\\('app/graph/nodes.py'\\).read\\(\\)\\); print\\('OK'\\)\")",
+      "Bash(\"venv\\\\Scripts\\\\python.exe\" -c \"import ast; ast.parse\\(open\\('app/graph/tools.py'\\).read\\(\\)\\); ast.parse\\(open\\('app/main.py'\\).read\\(\\)\\); print\\('OK'\\)\")",
+      "Bash(\"venv\\\\Scripts\\\\python.exe\" -c \"import ast; [ast.parse\\(open\\(f\\).read\\(\\)\\) or print\\(f,'OK'\\) for f in ['app/graph/nodes.py','app/graph/tools.py']]\")",
+      "Bash('venv\\\\Scripts\\\\python.exe' -c ' *)",
+      "Bash(\"venv\\\\Scripts\\\\python.exe\" -c \"import pkg_resources; pkgs = {p.key for p in pkg_resources.working_set}; print\\('google-genai' in pkgs, 'langchain-google-genai' in pkgs, 'google-generativeai' in pkgs\\)\")",
+      "Bash(\"venv\\\\Scripts\\\\python.exe\" -c \"from langchain_google_genai import ChatGoogleGenerativeAI; print\\('langchain_google_genai OK'\\)\")",
+      "Bash(python -c \"import ast; ast.parse\\(open\\('app/graph/nodes.py'\\).read\\(\\)\\); print\\('OK'\\)\")",
+      "Bash(python -c \"import ast; ast.parse\\(open\\('app/graph/nodes.py'\\).read\\(\\)\\); print\\('nodes.py OK'\\)\")",
+      "Bash(python -c \"import ast; ast.parse\\(open\\('app/graph/nodes.py'\\).read\\(\\)\\); ast.parse\\(open\\('app/graph/tools.py'\\).read\\(\\)\\); print\\('Both OK'\\)\")",
+      "Bash(python -c \"import ast; ast.parse\\(open\\('app/graph/nodes.py'\\).read\\(\\)\\); ast.parse\\(open\\('app/graph/tools.py'\\).read\\(\\)\\); print\\('Python OK'\\)\")",
+      "Bash(python -c \"import ast; ast.parse\\(open\\('app/graph/nodes.py'\\).read\\(\\)\\); ast.parse\\(open\\('app/graph/tools.py'\\).read\\(\\)\\); ast.parse\\(open\\('app/graph/state.py'\\).read\\(\\)\\); print\\('All OK'\\)\")"
+    ]
+  }
+}

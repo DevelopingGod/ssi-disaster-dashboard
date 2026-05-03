@@ -1,0 +1,52 @@
+# ── Python ────────────────────────────────────────────────────────────────────
+__pycache__/
+*.py[cod]
+*.pyo
+*.pyd
+*.so
+*.egg
+*.egg-info/
+dist/
+build/
+.eggs/
+
+# Virtual environments
+venv/
+.venv/
+env/
+.env/
+
+# ── Environment / secrets ─────────────────────────────────────────────────────
+.env
+.env.*
+!.env.example
+
+# ── IDE / OS ──────────────────────────────────────────────────────────────────
+.idea/
+.vscode/
+*.swp
+*.swo
+.DS_Store
+Thumbs.db
+
+# ── Logs ──────────────────────────────────────────────────────────────────────
+*.log
+logs/
+
+# ── Context / scratch files ───────────────────────────────────────────────────
+*.txt
+!requirements*.txt
+
+# ── Frontend (covered by frontend/.gitignore; listed here for root-level git) ─
+frontend/node_modules/
+frontend/.next/
+frontend/out/
+frontend/.vercel/
+frontend/.env*
+!frontend/.env.example
+
+# ── Docker ────────────────────────────────────────────────────────────────────
+.dockerignore
+
+# ── HuggingFace / cache ───────────────────────────────────────────────────────
+.cache/
