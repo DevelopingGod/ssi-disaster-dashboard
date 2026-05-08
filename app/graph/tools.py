@@ -597,14 +597,18 @@ def _latlon_to_region(lat: float, lon: float) -> str:
 
 
 def _cutoff_to_firms_days(timeframe: str) -> int:
-    """Convert a text timeframe to a FIRMS day_range (1–10)."""
+    """Convert a text timeframe to a FIRMS day_range.
+
+    The FIRMS area CSV endpoint only accepts values in [1..5]; callers
+    must clamp the result before sending it to the API.
+    """
     t = timeframe.lower()
     if "today" in t or "1 day" in t or "24" in t:
         return 1
     if "yesterday" in t or "2 day" in t:
         return 2
     if "week" in t or "7 day" in t:
-        return 7
+        return 5   # API max — closest we can get to a full week
     return 2   # default: last 48 h
 
 
@@ -627,7 +631,7 @@ def _fetch_firms_wildfires(
         logger.debug("FIRMS_MAP_KEY not set — skipping NASA FIRMS wildfire data")
         return []
 
-    day_range = min(_cutoff_to_firms_days(timeframe), 10)
+    day_range = min(_cutoff_to_firms_days(timeframe), 5)  # FIRMS area endpoint max is 5 days
     cache_key = f"firms:global:{day_range}"
     cached    = _firms_cache.get(cache_key)
     if cached is not None:

@@ -206,7 +206,7 @@ def _sanitize_query(query: str) -> str:
 
 class RouterDecision(BaseModel):
     route_target: Literal["live_tools", "historical_rag", "hybrid", "clarification_needed"]
-    reason: str
+    reason: str = Field(default="")
     timeframe: str = Field(default="recent")
     location: Optional[str] = Field(default=None)
     intent: Literal["disaster_query", "general_chat"] = Field(default="disaster_query")
