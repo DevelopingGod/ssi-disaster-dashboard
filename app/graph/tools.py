@@ -1018,7 +1018,7 @@ def fetch_humanitarian_context(disaster_type: str, country_name: str) -> str:
     encoded = urllib.parse.quote(" AND ".join(parts) if parts else "disaster")
     url = (
         f"https://api.reliefweb.int/v2/reports"
-        f"?appname=natural-disaster-io-research"
+        f"?appname=IEEE-Disaster-Dashboard-S2I3"
         f"&query[value]={encoded}"
         f"&limit=1&sort[]=date:desc"
         f"&fields[include][]=title&fields[include][]=body&fields[include][]=url"
