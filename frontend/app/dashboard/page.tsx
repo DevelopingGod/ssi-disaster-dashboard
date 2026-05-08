@@ -9,6 +9,8 @@ import type { ChatMessage, ConversationTurn, DisasterEvent } from "@/lib/types";
 
 const MapPanel = dynamic(() => import("@/components/MapPanel"), { ssr: false });
 
+const MOBILE_BREAKPOINT = 768;
+
 // ── Storage helpers ──────────────────────────────────────────────────────────
 const SK = {
   messages:  "disaster-io:messages",
@@ -56,6 +58,7 @@ export default function Dashboard() {
   const [selectedEventId, setSelectedEventId] = useState<string | null>(null);
   const [showMap, setShowMap]                 = useState(true);
   const [chatWidth, setChatWidth]             = useState(CHAT_WIDTH_DEFAULT);
+  const [isMobile, setIsMobile]               = useState(false);
 
   // Conversation history ref — no re-render on change; synced to localStorage after mount
   const conversationHistoryRef = useRef<ConversationTurn[]>([]);
@@ -72,7 +75,9 @@ export default function Dashboard() {
     const storedMessages = loadJson<ChatMessage[]>(SK.messages, []);
     setMessages(storedMessages);
     setEvents(loadJson<DisasterEvent[]>(SK.events, []));
-    setShowMap(loadJson<boolean>(SK.showMap, true));
+    // On mobile always start on chat — don't restore a desktop "map open" state
+    const mobileNow = window.innerWidth < MOBILE_BREAKPOINT;
+    setShowMap(mobileNow ? false : loadJson<boolean>(SK.showMap, true));
     setChatWidth(loadJson<number>(SK.chatWidth, CHAT_WIDTH_DEFAULT));
     conversationHistoryRef.current = loadJson<ConversationTurn[]>(SK.history, []);
     setMounted(true);
@@ -90,6 +95,14 @@ export default function Dashboard() {
   useEffect(() => { if (mounted) saveJson(SK.events,    events);    }, [mounted, events]);
   useEffect(() => { if (mounted) saveJson(SK.showMap,   showMap);   }, [mounted, showMap]);
   useEffect(() => { if (mounted) saveJson(SK.chatWidth, chatWidth); }, [mounted, chatWidth]);
+
+  // ── Mobile detection ─────────────────────────────────────────────────────
+  useEffect(() => {
+    const check = () => setIsMobile(window.innerWidth < MOBILE_BREAKPOINT);
+    check(); // Run immediately on mount
+    window.addEventListener("resize", check);
+    return () => window.removeEventListener("resize", check);
+  }, []);
 
   // ── Resize listeners (document-level, stable refs) ───────────────────────
   useEffect(() => {
@@ -270,6 +283,113 @@ export default function Dashboard() {
     });
   };
 
+  // ── Shared props for ChatPanel ───────────────────────────────────────────
+  const chatPanelProps = {
+    messages,
+    onSend:        handleSend,
+    onClearChat:   handleClearChat,
+    loading,
+    warnings,
+    mounted,
+  };
+
+  // ── Mobile layout — full-screen tab switch (chat OR map) ─────────────────
+  if (isMobile) {
+    return (
+      <main
+        className="flex w-full overflow-hidden"
+        style={{ height: "calc(100vh - 56px)", backgroundColor: "var(--bg-primary)" }}
+      >
+        {showMap ? (
+          /*
+           * Fixed full-viewport overlay. Nav bar sits at the TOP (never
+           * cut off by Android system navigation). Map fills below it.
+           */
+          <div
+            style={{
+              position: "fixed",
+              top: 0, left: 0, right: 0, bottom: 0,
+              zIndex: 9999,
+              background: "var(--bg-primary)",
+            }}
+          >
+            {/* TOP bar — always the first thing the user sees */}
+            <div
+              style={{
+                position: "absolute",
+                top: 0, left: 0, right: 0,
+                height: "52px",
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "space-between",
+                padding: "0 1rem",
+                backgroundColor: "var(--bg-elevated)",
+                borderBottom: "1px solid var(--border-c)",
+                zIndex: 10000,
+              }}
+            >
+              <button
+                onClick={() => setShowMap(false)}
+                style={{
+                  display: "flex",
+                  alignItems: "center",
+                  gap: "0.5rem",
+                  padding: "0.5rem 1rem",
+                  border: "1px solid var(--accent)",
+                  color: "var(--accent)",
+                  backgroundColor: "color-mix(in srgb, var(--accent) 10%, transparent)",
+                  fontFamily: "monospace",
+                  fontSize: "0.625rem",
+                  textTransform: "uppercase",
+                  letterSpacing: "0.1em",
+                  cursor: "pointer",
+                }}
+              >
+                ← Back to Chat
+              </button>
+              <span
+                style={{
+                  fontFamily: "monospace",
+                  fontSize: "0.5rem",
+                  textTransform: "uppercase",
+                  letterSpacing: "0.1em",
+                  color: "var(--text-muted)",
+                }}
+              >
+                {events.length} event{events.length !== 1 ? "s" : ""} plotted
+              </span>
+            </div>
+
+            {/* Map: everything below the top bar */}
+            <div
+              style={{
+                position: "absolute",
+                top: "52px", left: 0, right: 0, bottom: 0,
+                overflow: "hidden",
+              }}
+            >
+              <MapPanel events={events} selectedEventId={selectedEventId} isMobile />
+            </div>
+          </div>
+        ) : (
+          /* Full-screen chat; toggle button switches to map view */
+          <div className="h-full w-full overflow-hidden">
+            <ChatPanel
+              {...chatPanelProps}
+              showMap={false}
+              onToggleMap={() => setShowMap(true)}
+              onMessageClick={(id) => {
+                setSelectedEventId(id);
+                setShowMap(true); // Auto-switch to map when a pinned event is tapped
+              }}
+            />
+          </div>
+        )}
+      </main>
+    );
+  }
+
+  // ── Desktop layout — resizable split grid ────────────────────────────────
   return (
     <main
       className="flex w-full overflow-hidden"
@@ -291,15 +411,10 @@ export default function Dashboard() {
           {/* Chat panel */}
           <div className="h-full overflow-hidden min-w-0">
             <ChatPanel
-              messages={messages}
-              onSend={handleSend}
-              onMessageClick={setSelectedEventId}
-              onClearChat={handleClearChat}
-              loading={loading}
-              warnings={warnings}
+              {...chatPanelProps}
               showMap={showMap}
               onToggleMap={() => setShowMap(false)}
-              mounted={mounted}
+              onMessageClick={setSelectedEventId}
             />
           </div>
 
@@ -327,15 +442,10 @@ export default function Dashboard() {
         /* ── Chat-only view ── */
         <div className="h-full w-full overflow-hidden">
           <ChatPanel
-            messages={messages}
-            onSend={handleSend}
-            onMessageClick={setSelectedEventId}
-            onClearChat={handleClearChat}
-            loading={loading}
-            warnings={warnings}
+            {...chatPanelProps}
             showMap={showMap}
             onToggleMap={() => setShowMap(true)}
-            mounted={mounted}
+            onMessageClick={setSelectedEventId}
           />
         </div>
       )}

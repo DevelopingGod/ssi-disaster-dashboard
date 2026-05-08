@@ -10,6 +10,7 @@ import type { DisasterEvent } from "@/lib/types";
 type MapPanelProps = {
   events: DisasterEvent[];
   selectedEventId?: string | null;
+  isMobile?: boolean;
 };
 
 function eventColor(eventType: DisasterEvent["event_type"]): string {
@@ -64,7 +65,7 @@ function MapAutoZoom({ events, selectedEventId }: { events: DisasterEvent[]; sel
   return null;
 }
 
-export default function MapPanel({ events, selectedEventId }: MapPanelProps) {
+export default function MapPanel({ events, selectedEventId, isMobile = false }: MapPanelProps) {
   const [mapLayer, setMapLayer] = useState<"dark" | "light" | "satellite" | "terrain">("dark");
 
   const featureCollection = {
@@ -214,43 +215,50 @@ export default function MapPanel({ events, selectedEventId }: MapPanelProps) {
         />
       </MapContainer>
 
-      {/* Layer switcher */}
+      {/* Layer switcher — shortened labels on mobile so they fit a narrow screen */}
       <div
-        className="absolute right-3 top-3 z-[1000] flex gap-px border"
+        className="absolute right-3 top-3 z-[2000] flex gap-px border"
         style={{ backgroundColor: "var(--border-c)", borderColor: "var(--border-c)" }}
       >
-        {(["dark", "light", "satellite", "terrain"] as const).map((layer) => (
-          <button
-            key={layer}
-            onClick={() => setMapLayer(layer)}
-            className="px-2.5 py-1.5 text-[0.5625rem] font-mono uppercase tracking-widest capitalize transition-colors"
-            style={
-              mapLayer === layer
-                ? { backgroundColor: "var(--accent)", color: "var(--bg-primary)" }
-                : { backgroundColor: "var(--bg-elevated)", color: "var(--text-muted)" }
-            }
-          >
-            {layer}
-          </button>
-        ))}
+        {(["dark", "light", "satellite", "terrain"] as const).map((layer) => {
+          const label = isMobile
+            ? { dark: "Dark", light: "Light", satellite: "Sat", terrain: "Topo" }[layer]
+            : layer;
+          return (
+            <button
+              key={layer}
+              onClick={() => setMapLayer(layer)}
+              className="px-2.5 py-1.5 text-[0.5625rem] font-mono uppercase tracking-widest capitalize transition-colors"
+              style={
+                mapLayer === layer
+                  ? { backgroundColor: "var(--accent)", color: "var(--bg-primary)" }
+                  : { backgroundColor: "var(--bg-elevated)", color: "var(--text-muted)" }
+              }
+            >
+              {label}
+            </button>
+          );
+        })}
       </div>
 
-      {/* Event count */}
-      <div
-        className="absolute right-3 top-14 z-[1000] border px-3 py-1.5 text-[0.5625rem] font-mono uppercase tracking-widest"
-        style={{
-          backgroundColor: "color-mix(in srgb, var(--bg-elevated) 90%, transparent)",
-          borderColor: "var(--border-c)",
-          color: "var(--text-muted)",
-        }}
-      >
-        {events.length} event{events.length !== 1 ? "s" : ""} plotted
-      </div>
+      {/* Event count — hidden on mobile (shown in dashboard bottom bar instead) */}
+      {!isMobile && (
+        <div
+          className="absolute right-3 top-14 z-[2000] border px-3 py-1.5 text-[0.5625rem] font-mono uppercase tracking-widest"
+          style={{
+            backgroundColor: "color-mix(in srgb, var(--bg-elevated) 90%, transparent)",
+            borderColor: "var(--border-c)",
+            color: "var(--text-muted)",
+          }}
+        >
+          {events.length} event{events.length !== 1 ? "s" : ""} plotted
+        </div>
+      )}
 
       {/* Legend */}
       {events.length > 0 && (
         <div
-          className="absolute bottom-6 left-3 z-[1000] border p-3"
+          className="absolute bottom-6 left-3 z-[2000] border p-3"
           style={{
             backgroundColor: "color-mix(in srgb, var(--bg-elevated) 92%, transparent)",
             borderColor: "var(--border-c)",

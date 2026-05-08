@@ -1,4 +1,5 @@
 import csv
+import concurrent.futures
 import email.utils
 import httpx
 import io
@@ -134,6 +135,25 @@ def map_gdacs_type(event_type: str) -> str:
         "TS": "tsunami",    "VO": "volcano", "DR": "drought",
         "WF": "wildfire",
     }.get(event_type.upper(), "other")
+
+
+def _clean_gdacs_description(desc: str) -> str:
+    """
+    Strip sentences that contain GDACS's '[unknown]' placeholder text.
+
+    GDACS RSS descriptions use templates like:
+      "The cyclone affects these countries: [unknown] (vulnerability [unknown])."
+    When country / vulnerability data is unavailable the literal token '[unknown]'
+    is left in the string.  This looks unprofessional in the UI; we drop any
+    sentence that contains the token and fall back to the event title if the
+    entire description is cleaned away.
+    """
+    if "[unknown]" not in desc:
+        return desc
+    # Split on sentence boundaries (period / exclamation / question followed by whitespace)
+    sentences = re.split(r"(?<=[.!?])\s+", desc)
+    clean = [s for s in sentences if "[unknown]" not in s]
+    return " ".join(clean).strip()
 
 
 def _parse_rfc2822_date(date_str: str) -> Optional[datetime]:
@@ -608,29 +628,57 @@ def _fetch_firms_wildfires(
         return []
 
     day_range = min(_cutoff_to_firms_days(timeframe), 10)
-    # Use "world" keyword for global queries — the bounding-box area endpoint
-    # rejects requests that cover more than ~10° x 10°.
-    area = "world"
-    cache_key = f"firms:world:{day_range}"
+    cache_key = f"firms:global:{day_range}"
     cached    = _firms_cache.get(cache_key)
     if cached is not None:
         logger.debug("FIRMS cache hit: %s (%d events)", cache_key, len(cached))
         return cached
 
-    url = (
-        f"https://firms.modaps.eosdis.nasa.gov/api/area/csv"
-        f"/{firms_key}/VIIRS_SNPP_NRT/{area}/{day_range}"
-    )
-    try:
-        resp = _retry_get(url, timeout=30.0)
-    except Exception as exc:
-        logger.warning("NASA FIRMS fetch failed: %s", exc)
+    # The FIRMS area CSV endpoint rejects the full-world bounding box and the
+    # "world" keyword.  Split into two hemispheres (both confirmed 200 OK) and
+    # fetch in parallel — net latency ≈ one request, full global coverage.
+    _HEMI = ["-180,-90,0,90", "0,-90,180,90"]
+
+    def _fetch_hemi(bbox: str) -> str:
+        url = (
+            f"https://firms.modaps.eosdis.nasa.gov/api/area/csv"
+            f"/{firms_key}/VIIRS_SNPP_NRT/{bbox}/{day_range}"
+        )
+        try:
+            return _retry_get(url, timeout=30.0).text
+        except Exception as exc:
+            logger.warning("NASA FIRMS fetch failed (bbox=%s): %s", bbox, exc)
+            return ""
+
+    raw_csv_parts: List[str] = []
+    with concurrent.futures.ThreadPoolExecutor(max_workers=2) as pool:
+        for text in pool.map(_fetch_hemi, _HEMI):
+            if text:
+                raw_csv_parts.append(text)
+
+    # Merge: keep one header row, concatenate all data rows.
+    header: Optional[str] = None
+    data_lines: List[str] = []
+    for part in raw_csv_parts:
+        lines = part.strip().splitlines()
+        if not lines:
+            continue
+        if header is None:
+            header = lines[0]
+            data_lines.extend(lines[1:])
+        else:
+            data_lines.extend(lines[1:])   # skip duplicate header
+
+    if not header:
+        logger.warning("NASA FIRMS: no data returned from either hemisphere")
         return []
+
+    combined_csv = header + "\n" + "\n".join(data_lines)
 
     # ── Parse CSV and cluster into 1° grid cells ─────────────────────────────
     clusters: Dict[str, dict] = {}
     try:
-        reader = csv.DictReader(io.StringIO(resp.text))
+        reader = csv.DictReader(io.StringIO(combined_csv))
         for row in reader:
             try:
                 # "l" = low confidence → skip; "n" = nominal, "h" = high → keep
@@ -807,7 +855,7 @@ def fetch_live_disasters(
                         "place_name": title,
                     },
                     "severity":          {"label": alert_level},
-                    "narrative_summary": description or title,
+                    "narrative_summary": _clean_gdacs_description(description) or title,
                     "tags": ["live", "gdacs", alert_level.lower(), event_type],
                     "raw_payload":   {"title": title, "alert_level": alert_level},
                 }
