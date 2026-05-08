@@ -608,7 +608,10 @@ def _fetch_firms_wildfires(
         return []
 
     day_range = min(_cutoff_to_firms_days(timeframe), 10)
-    cache_key = f"firms:{day_range}"
+    # Use "world" keyword for global queries — the bounding-box area endpoint
+    # rejects requests that cover more than ~10° x 10°.
+    area = "world"
+    cache_key = f"firms:world:{day_range}"
     cached    = _firms_cache.get(cache_key)
     if cached is not None:
         logger.debug("FIRMS cache hit: %s (%d events)", cache_key, len(cached))
@@ -616,7 +619,7 @@ def _fetch_firms_wildfires(
 
     url = (
         f"https://firms.modaps.eosdis.nasa.gov/api/area/csv"
-        f"/{firms_key}/VIIRS_SNPP_NRT/-180,-90,180,90/{day_range}"
+        f"/{firms_key}/VIIRS_SNPP_NRT/{area}/{day_range}"
     )
     try:
         resp = _retry_get(url, timeout=30.0)
