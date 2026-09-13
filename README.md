@@ -37,7 +37,7 @@ Queries are understood in any language. All timestamps are UTC.
 - **Natural-language queries** — no structured input required; any language supported
 - **Live + historical coverage** — current global alerts (GDACS RSS), M2.5+ earthquakes (USGS), historical event archives (GDACS EventList)
 - **Humanitarian context** — narrative reports from ReliefWeb surfaced alongside raw event data
-- **Dual LLM with automatic fallback** — Groq `llama-3.3-70b-versatile` primary; falls back to Google Gemini `gemini-2.0-flash` on rate-limit or quota exhaustion with no user-visible error
+- **Dual LLM with automatic fallback** — Groq `llama-3.3-70b-versatile` primary; falls back to Google Gemini `gemini-2.5-flash` on rate-limit or quota exhaustion with no user-visible error
 - **Precise map filtering** — pins match exactly the events described in the text briefing; map clears on each new query
 - **Multi-type queries** — "earthquakes and cyclones in Asia" correctly filters both text and map to only those types
 - **Resizable split layout** — drag the chat/map divider; position persists to `localStorage`
@@ -246,7 +246,7 @@ Returns `{"status": "ok", "service": "disaster-io-backend"}`. Use for uptime che
 | Backend framework | FastAPI |
 | Agent orchestration | LangGraph |
 | Primary LLM | Groq `llama-3.3-70b-versatile` |
-| Fallback LLM | Google Gemini `gemini-2.0-flash` |
+| Fallback LLM | Google Gemini `gemini-2.5-flash` |
 | LLM client libraries | `langchain_groq`, `langchain_google_genai` |
 | Data models | Pydantic v2 |
 | Frontend framework | Next.js 15 (App Router) + React 18 |
