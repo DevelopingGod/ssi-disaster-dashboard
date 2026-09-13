@@ -243,7 +243,7 @@ def _get_groq_llm():
     if not key:
         logger.warning("GROQ_API_KEY not set — Groq LLM unavailable")
         return None
-    return ChatGroq(model="llama-3.3-70b-versatile", temperature=0.2)
+    return ChatGroq(model="openai/gpt-oss-120b", temperature=0.2)
 
 
 @lru_cache(maxsize=1)
@@ -264,7 +264,14 @@ def _get_gemini_llm():
 
 
 def _is_rate_limit_error(err_str: str) -> bool:
-    """Return True for any quota / rate-limit error that warrants an LLM switch."""
+    """Return True for any quota / rate-limit / model-unavailable error that
+    warrants switching to the other LLM provider.
+
+    Includes model-deprecation errors (model_not_found / "does not exist")
+    because a provider retiring a model has the same practical effect as a
+    quota outage: the primary becomes unusable and Gemini should take over
+    rather than surfacing a hard 500 to the user.
+    """
     lowered = err_str.lower()
     return (
         "rate_limit" in lowered
@@ -274,6 +281,8 @@ def _is_rate_limit_error(err_str: str) -> bool:
         or "quota" in lowered
         or "resource_exhausted" in lowered   # Gemini quota code
         or "overloaded" in lowered
+        or "model_not_found" in lowered
+        or "does not exist" in lowered
     )
 
 
